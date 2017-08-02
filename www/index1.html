@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <!--
+        Customize this policy to fit your own app's needs. For more guidance, see:
+            https://github.com/apache/cordova-plugin-whitelist/blob/master/README.md#content-security-policy
+        Some notes:
+            * gap: is required only on iOS (when using UIWebView) and is needed for JS->native communication
+            * https://ssl.gstatic.com is required only on Android and is needed for TalkBack to function properly
+            * Disables use of inline scripts in order to mitigate risk of XSS vulnerabilities. To change this:
+                * Enable inline JS: add 'unsafe-inline' to default-src
+        -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' data: gap: https://ssl.gstatic.com 'unsafe-eval'; style-src 'self' 'unsafe-inline'; media-src *">
+
+    <!-- Required meta tags-->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, minimal-ui">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-status-bar-style" content="black">
+    <meta name="format-detection" content="telephone=no">
+    <meta name="msapplication-tap-highlight" content="no">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+		<link rel="stylesheet" href="https://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.css">
+		<script src="https://code.jquery.com/jquery-1.11.3.min.js"></script>
+		<script src="https://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.js"></script>
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.3.2/jquery.min.js"></script>
+		<link type="text/css" href="http://code.jquery.com/ui/1.10.3/themes/smoothness/jquery-ui.css" rel="stylesheet" />
+		<script type="text/javascript" src="http://maps.google.com/maps/api/js?sensor=false"></script>
+		<script type="text/javascript" src="http://www.google.com/jsapi"></script> 	
+		<script src="http://code.jquery.com/jquery-1.9.1.js"></script>
+		<script src="http://code.jquery.com/ui/1.10.3/jquery-ui.js"></script>
+		<link type="text/css" href="default.css" rel="stylesheet" media="all" />
+		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+    <!-- Your app title -->
+    <title>My App</title>
+
+    <!-- This template defaults to the iOS CSS theme. To support both iOS and material design themes, see the Framework7 Tutorial at the link below:
+        http://www.idangero.us/framework7/tutorials/maintain-both-ios-and-material-themes-in-single-app.html
+     -->
+
+    <!-- <link rel="stylesheet" href="lib/framework7/css/framework7.ios.min.css"> -->
+    <!-- <link rel="stylesheet" href="lib/framework7/css/framework7.ios.colors.min.css"> -->
+
+    <link rel="stylesheet" href="css/styles.css">
+	<style>
+		body {font-family: "Lato", sans-serif;}
+		/* Center the loader */
+		#loader {
+		  position: absolute;
+		  left: 50%;
+		  top: 50%;
+		  z-index: 1;
+		  width: 150px;
+		  height: 150px;
+		  margin: -75px 0 0 -75px;
+		  border: 10px solid #f3f3f3;
+		  border-radius: 50%;
+		  border-top: 10px solid green;
+		  width: 80px;
+		  height: 80px;
+		  -webkit-animation: spin 2s linear infinite;
+		  animation: spin 2s linear infinite;
+		}
+
+		@-webkit-keyframes spin {
+		  0% { -webkit-transform: rotate(0deg); }
+		  100% { -webkit-transform: rotate(360deg); }
+		}
+
+		@keyframes spin {
+		  0% { transform: rotate(0deg); }
+		  100% { transform: rotate(360deg); }
+		}
+		#googft-mapCanvas{
+			width: 100%;
+			height:100%;
+			}
+		table, td {
+			border: 1px solid green;
+		}
+		table {
+			border-collapse: collapse;
+			width: 100%;
+			align: center;
+		}
+
+		th, td {
+			text-align: left;
+			padding: 8px;
+		}
+
+		tr:nth-child(even){background-color: #f2f2f2}
+
+		th {
+			background-color: #4CAF50;
+			color: white;
+		}
+	</style>
+<script type="text/javascript"> //Fisrt script to query Table and get data
+	document.getElementById("no").onchange = initialize(); createSidebar(); //locate();
+	//var txt = document.getElementById("no").value;
+</script>
+ <script>
+
+function  createSidebar() { //This line is important, change Table ID and column names
+	locate();
+	var txt = document.getElementById("no").value;
+	
+	var queryText = encodeURIComponent("SELECT 'Name','LAT','LON','Code','coordinates' FROM 1euHNAy9kG1LMiPuvTjgJjOc25qOqIWmYVCCoZEnD ORDER BY ST_DISTANCE(col24, ");
+	var query = new google.visualization.Query('http://www.google.com/fusiontables/gvizdata?tq='  + queryText + 'LATLNG(0.5116137,35.2826757))' + 'LIMIT '+ txt);
+	
+	query.send(getData);//set the callback function
+
+}
+  
+  google.setOnLoadCallback(createSidebar);// Set a callback to run when the Google Visualization API is loaded.
+</script> 
+
+<script type="text/javascript"> //Second sript to create sidebar
+var geocoder= new google.maps.Geocoder();
+var FTresponse = null;
+
+function getData(response) { //define callback function, this is called when the results are returned
+if (!response) {
+  alert('no response');
+  return;
+}
+if (response.isError()) {
+  alert('Error in query: ' + response.getMessage() + ' ' + response.getDetailedMessage());
+  return;
+} 
+  FTresponse = response;
+  numRows = response.getDataTable().getNumberOfRows();
+  numCols = response.getDataTable().getNumberOfColumns();
+  
+  
+  fusiontabledata = "<table><tr>";//concatenate the results into a string, you can build a table here
+  fusiontabledata += "<th>Facility Name</th>";
+  fusiontabledata += "<th>Information Link</th>";
+  fusiontabledata += "<th>Map Link</th>";
+  //fusiontabledata += "<th>" Map + "</th>";
+  fusiontabledata += "</tr><tr>";
+  
+  
+  for(i = 0; i < numRows; i++) {
+//    for(j = 0; j < numCols; j++) {
+      fusiontabledata += "<td><a>"+response.getDataTable().getValue(i, 0) +"</a></td>";
+	  //fusiontabledata += "<td><a onclick="$('object').attr('data','https://fusiontables.googleusercontent.com/embedviz?viz=CARD&q=select+*+from+1euHNAy9kG1LMiPuvTjgJjOc25qOqIWmYVCCoZEnD+where+Code="+ response.getDataTable().getValue(i, 3) + "')">Link</a></td>";
+	  fusiontabledata += "<td><div =InfoWin><a href='https://fusiontables.googleusercontent.com/embedviz?viz=CARD&q=select+*+from+1euHNAy9kG1LMiPuvTjgJjOc25qOqIWmYVCCoZEnD+where+Code="+ response.getDataTable().getValue(i, 3) + "'>Link</a></div></td>";
+	  fusiontabledata += "<td><a href='http://maps.google.com/maps?z=12&t=m&q="+ response.getDataTable().getValue(i, 4) + "(Label,"+ response.getDataTable().getValue(i, 0) + ")'>Map</a></td>";
+	  //fusiontabledata += "<td><a href='geo:"+ response.getDataTable().getValue(i, 4) + "?q"+ response.getDataTable().getValue(i, 4) + "(Label,"+ response.getDataTable().getValue(i, 0) + ")'>Map</a></td>";
+	  //fusiontabledata += "<td><a href='https://fusiontables.googleusercontent.com/embedviz?viz=CARD&q=select+*+from+1euHNAy9kG1LMiPuvTjgJjOc25qOqIWmYVCCoZEnD+where+Code="+ response.getDataTable().getValue(i, 3) + "'>"+response.getDataTable().getValue(i, 2) +"</a></td>";
+//    }
+	fusiontabledata += "</tr><tr>";
+  }
+ 
+  
+  fusiontabledata += "</table>"  
+  //display the results on the page
+  document.getElementById('content').innerHTML = fusiontabledata;
+  //document.getElementById("content").style.table-layout = "fixed";
+
+  
+  
+}
+google.load('visualization', '1', {'packages':['corechart', 'table', 'geomap']});
+</script>
+<script>
+function locate() {
+        var lat, long;
+        lat = 0.511,
+        long = 35.282;
+        if (navigator.geolocation) {
+          navigator.geolocation.getCurrentPosition(function success(position) {
+            lat = position.coords.latitude;
+            long = position.coords.longitude;
+            initialize(lat, long);
+          }, function (error) {
+            switch (error.code) {
+            case error.TIMEOUT:
+              alert('Timeout. Try again.');
+              return initialize(lat, long);
+            case error.POSITION_UNAVAILABLE:
+              alert('Your position is not available at the moment.');
+              return initialize(lat, long);
+            case error.PERMISSION_DENIED:
+              alert('No geolocation. Things wont work out this way.');
+              return initialize(lat, long);
+            case error.UNKNOWN_ERROR:
+              alert('Unknown error. Fyi.');
+              return initialize(lat, long);
+            }
+          });
+        } else {
+          alert('Your device does not support geolocation');
+          // IE-8 issue...
+          return initialize(lat, long);
+        }
+		}
+</script>
+</head>
+<body onLoad="myFunction(); locate(); createSidebar();">
+
+
+<div id="loader"></div>
+<script>
+var myVar;
+
+function myFunction() {
+    myVar = setTimeout(showPage, 3000);
+}
+
+function showPage() {
+  document.getElementById("loader").style.display = "none";
+  //document.getElementById("content").style.display = "block";
+}
+</script>
+</head>
+
+<body>
+    <!-- Status bar overlay for full screen mode (PhoneGap) -->
+    <div class="statusbar-overlay"></div>
+
+    <!-- Panels overlay-->
+    <div class="panel-overlay"></div>
+    <!-- Left panel with reveal effect-->
+    <div class="panel panel-left panel-reveal">
+        <div class="content-block">
+            <p>Left panel content goes here</p>
+        </div>
+    </div>
+
+    <!-- Views -->
+    <div class="views">
+        <!-- Your main view, should have "view-main" class -->
+        <div class="view view-main">
+            <!-- Top Navbar-->
+            <div class="navbar">
+                <div class="navbar-inner">
+                    <!-- We need cool sliding animation on title element, so we have additional "sliding" class -->
+                    <div class="center sliding">UG Health-care locator</div>
+                    <div class="right">
+                        <!--
+                          Right link contains only icon - additional "icon-only" class
+                          Additional "open-panel" class tells app to open panel when we click on this link
+                        -->
+                        <a href="#" class="link icon-only open-panel"><i class="icon icon-bars"></i></a>
+                    </div>
+                </div>
+            </div>
+            <!-- Pages container, because we use fixed-through navbar and toolbar, it has additional appropriate classes-->
+            <div class="pages navbar-through toolbar-through">
+                <!-- Page, "data-page" contains page name -->
+                <div data-page="index" class="page">
+                    <!-- Scrollable page content -->
+                    <div class="page-content">
+                        <div class="content-block">
+                            <form>
+								<p>Select 
+									<select id="no" onchange="createSidebar();">
+									<option>2</option>
+									<option selected="selected">5</option>
+									<option>8</option>
+									<option>10</option>
+									<option>20</option>
+									<option>30</option>
+									<option>40</option>
+									<option>50</option>
+									<option>60</option>
+								</select> near me</p>
+							</form>
+  <!-- <div data-role="main" class="ui-content"> -->
+								<div id="content" class="table"></div>
+    <!-- <a href="#pagetwo">Go to Dialog Page</a> -->
+  <!-- </div> -->
+                            <!-- Link to another page -->
+                            <a href="about.html">About app</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Bottom Toolbar-->
+            <div class="toolbar">
+                <div class="toolbar-inner">
+                    <!-- Toolbar links -->
+                    <a href="#" class="link">Link 1</a>
+                    <a href="#" class="link">Link 2</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="text/javascript" src="cordova.js"></script>
+    <script type="text/javascript" src="lib/framework7/js/framework7.min.js"></script>
+    <script type="text/javascript" src="js/my-app.js"></script>
+</body>
+
+</html>

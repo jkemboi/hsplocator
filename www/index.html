@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <title></title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="https://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.css">
+<script src="https://code.jquery.com/jquery-1.11.3.min.js"></script>
+<script src="https://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.3.2/jquery.min.js"></script>
+<link type="text/css" href="http://code.jquery.com/ui/1.10.3/themes/smoothness/jquery-ui.css" rel="stylesheet" />
+<script type="text/javascript" src="http://maps.google.com/maps/api/js?sensor=true"></script>
+<script type="text/javascript" src="http://www.google.com/jsapi"></script> 	
+<script src="http://code.jquery.com/jquery-1.9.1.js"></script>
+<script src="http://code.jquery.com/ui/1.10.3/jquery-ui.js"></script>
+<link type="text/css" href="default.css" rel="stylesheet" media="all" />
+<script src="js/bootstrap.js"></script> // This JS have all necessary files
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<style>
+body {font-family: "Lato", sans-serif;}
+/* Center the loader */
+#loader {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  z-index: 1;
+  width: 150px;
+  height: 150px;
+  margin: -75px 0 0 -75px;
+  border: 10px solid #f3f3f3;
+  border-radius: 50%;
+  border-top: 10px solid green;
+  width: 80px;
+  height: 80px;
+  -webkit-animation: spin 2s linear infinite;
+  animation: spin 2s linear infinite;
+}
+
+@-webkit-keyframes spin {
+  0% { -webkit-transform: rotate(0deg); }
+  100% { -webkit-transform: rotate(360deg); }
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+#googft-mapCanvas{
+	width: 100%;
+	height:100%;
+	}
+table, td {
+    border: 1px solid green;
+}
+table {
+    border-collapse: collapse;
+    width: 100%;
+	align: center;
+}
+
+th, td {
+    text-align: left;
+    padding: 8px;
+}
+
+tr:nth-child(even){background-color: #f2f2f2}
+
+th {
+    background-color: #4CAF50;
+    color: white;
+}
+.page {
+  padding: 15px 0 0;
+}
+
+.bmd-modalButton {
+  display: block;
+  margin: 15px auto;
+  padding: 5px 15px;
+}
+
+.close-button {
+  overflow: hidden;
+}
+
+.bmd-modalContent {
+  box-shadow: none;
+  background-color: transparent;
+  border: 0;
+}
+  
+.bmd-modalContent .close {
+  font-size: 30px;
+  line-height: 30px;
+  padding: 7px 4px 7px 13px;
+  text-shadow: none;
+  opacity: .7;
+  color:#fff;
+}
+
+.bmd-modalContent .close span {
+  display: block;
+}
+
+.bmd-modalContent .close:hover,
+.bmd-modalContent .close:focus {
+  opacity: 1;
+  outline: none;
+}
+
+.bmd-modalContent iframe {
+  display: block;
+  margin: 0 auto;
+}
+<style>
+/* The Modal (background) */
+.modal {
+    display: none; /* Hidden by default */
+    position: fixed; /* Stay in place */
+    z-index: 1; /* Sit on top */
+    padding-top: 100px; /* Location of the box */
+    left: 0;
+    top: 0;
+    width: 100%; /* Full width */
+    height: 100%; /* Full height */
+    overflow: auto; /* Enable scroll if needed */
+    background-color: rgb(0,0,0); /* Fallback color */
+    background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+}
+
+/* Modal Content */
+.modal-content {
+    background-color: #fefefe;
+    margin: auto;
+    padding: 20px;
+    border: 1px solid #888;
+    width: 80%;
+}
+
+/* The Close Button */
+.close {
+    color: #aaaaaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+}
+
+.close:hover,
+.close:focus {
+    color: #000;
+    text-decoration: none;
+    cursor: pointer;
+}
+</style>
+<script>
+function locate() {
+        var lat, long;
+        lat = 0.511,
+        long = 35.282;
+		
+        if (navigator.geolocation) {
+          navigator.geolocation.getCurrentPosition(function success(position) {
+            lat = position.coords.latitude;
+            long = position.coords.longitude;
+            initialize(lat, long);
+          }, function (error) {
+            switch (error.code) {
+            case error.TIMEOUT:
+              alert('Timeout. Try again.');
+              return initialize(lat, long);
+            case error.POSITION_UNAVAILABLE:
+              alert('Your position is not available at the moment.');
+              return initialize(lat, long);
+            case error.PERMISSION_DENIED:
+              alert('No geolocation. Things wont work out this way.');
+              return initialize(lat, long);
+            case error.UNKNOWN_ERROR:
+              alert('Unknown error. Fyi.');
+              return initialize(lat, long);
+            }
+          });
+        } else {
+          alert('Your device does not support geolocation');
+          // IE-8 issue...
+          return initialize(lat, long);
+        }
+	document.getElementById("demo").innerHTML = + lat + "," + long;	
+	}
+	
+</script>
+<script type="text/javascript"> //Fisrt script to query Table and get data
+	document.getElementById("no").onchange = initialize(); createSidebar(); //locate();
+	//var txt = document.getElementById("no").value;
+</script>
+<script>
+	function  createSidebar() { //This line is important, change Table ID and column names
+	var txt = document.getElementById("no").value;
+	var x = document.getElementById("demo");
+	function showPosition(position) {
+    x.innerHTML =  + position.coords.latitude + 
+    "," + position.coords.longitude;
+	}
+	
+	var queryText = encodeURIComponent("SELECT 'Name','LAT','LON','Code','coordinates' FROM 1euHNAy9kG1LMiPuvTjgJjOc25qOqIWmYVCCoZEnD ORDER BY ST_DISTANCE(col24, LATLNG");
+	var query = new google.visualization.Query('http://www.google.com/fusiontables/gvizdata?tq='  + queryText + '(0.511,35.282))' + 'LIMIT '+ txt);
+	
+	query.send(getData);//set the callback function
+
+
+	}
+	google.setOnLoadCallback(createSidebar);// Set a callback to run when the Google Visualization API is loaded.
+</script>  
+
+<script type="text/javascript"> //Second sript to create sidebar
+var geocoder= new google.maps.Geocoder();
+var FTresponse = null;
+
+function getData(response) { //define callback function, this is called when the results are returned
+if (!response) {
+  alert('no response');
+  return;
+}
+if (response.isError()) {
+  alert('Error in query: ' + response.getMessage() + ' ' + response.getDetailedMessage());
+  return;
+} 
+  FTresponse = response;
+  numRows = response.getDataTable().getNumberOfRows();
+  numCols = response.getDataTable().getNumberOfColumns();
+  
+  
+  fusiontabledata = "<table><tr>";//concatenate the results into a string, you can build a table here
+  fusiontabledata += "<th>Facility Name</th>";
+  fusiontabledata += "<th>Information Link</th>";
+  fusiontabledata += "<th>Map Link</th>";
+  //fusiontabledata += "<th>" Map + "</th>";
+  fusiontabledata += "</tr><tr>";
+  
+  
+  for(i = 0; i < numRows; i++) {
+//    for(j = 0; j < numCols; j++) {
+      fusiontabledata += "<td><a>"+response.getDataTable().getValue(i, 0) +"</a></td>";
+	  //fusiontabledata += "<td><a onclick="$('object').attr('data','https://fusiontables.googleusercontent.com/embedviz?viz=CARD&q=select+*+from+1euHNAy9kG1LMiPuvTjgJjOc25qOqIWmYVCCoZEnD+where+Code="+ response.getDataTable().getValue(i, 3) + "')">Link</a></td>";
+	  //fusiontabledata += "<td><a onclick='doalert(this);test()' value='https://fusiontables.googleusercontent.com/embedviz?viz=CARD&q=select+*+from+1euHNAy9kG1LMiPuvTjgJjOc25qOqIWmYVCCoZEnD+where+Code="+ response.getDataTable().getValue(i, 3) + "'>Link</a></td>";
+	  fusiontabledata += "<td><a href='https://fusiontables.googleusercontent.com/embedviz?viz=CARD&q=select+*+from+1euHNAy9kG1LMiPuvTjgJjOc25qOqIWmYVCCoZEnD+where+Code="+ response.getDataTable().getValue(i, 3) + "' target='myModal'>Link</a></td>";
+	  //fusiontabledata += "<td><button type='button' class='bmd-modalButton' data-toggle='modal' data-bmdSrc='https://fusiontables.googleusercontent.com/embedviz?viz=CARD&q=select+*+from+1euHNAy9kG1LMiPuvTjgJjOc25qOqIWmYVCCoZEnD+where+Code="+ response.getDataTable().getValue(i, 3) + "' data-target='#myModal'>Link</button></td>";
+	  fusiontabledata += "<td><a href='http://maps.google.com/maps?z=12&t=m&q="+ response.getDataTable().getValue(i, 4) + "(Label,"+ response.getDataTable().getValue(i, 0) + ")'>Map</a></td>";
+	  //fusiontabledata += "<td><a href='geo:"+ response.getDataTable().getValue(i, 4) + "?q"+ response.getDataTable().getValue(i, 4) + "(Label,"+ response.getDataTable().getValue(i, 0) + ")'>Map</a></td>";
+	  //fusiontabledata += "<td><a href='https://fusiontables.googleusercontent.com/embedviz?viz=CARD&q=select+*+from+1euHNAy9kG1LMiPuvTjgJjOc25qOqIWmYVCCoZEnD+where+Code="+ response.getDataTable().getValue(i, 3) + "'>"+response.getDataTable().getValue(i, 2) +"</a></td>";
+//    }
+	fusiontabledata += "</tr><tr>";
+  }
+ 
+  
+  fusiontabledata += "</table>"  
+  //display the results on the page
+  document.getElementById('content').innerHTML = fusiontabledata;
+  //document.getElementById("content").style.table-layout = "fixed";
+
+  
+  
+}
+google.load('visualization', '1', {'packages':['corechart', 'table', 'geomap']});
+</script>
+
+<script>
+   (function($) {
+    
+    $.fn.bmdIframe = function( options ) {
+        var self = this;
+        var settings = $.extend({
+            classBtn: '.bmd-modalButton',
+            defaultW: 640,
+            defaultH: 360
+        }, options );
+      
+        $(settings.classBtn).on('click', function(e) {
+          var allowFullscreen = $(this).attr('data-bmdVideoFullscreen') || false;
+          
+          var dataVideo = {
+            'src': $(this).attr('data-bmdSrc'),
+            'height': $(this).attr('data-bmdHeight') || settings.defaultH,
+            'width': $(this).attr('data-bmdWidth') || settings.defaultW
+          };
+          
+          if ( allowFullscreen ) dataVideo.allowfullscreen = "";
+          
+          // stampiamo i nostri dati nell'iframe
+          $(self).find("iframe").attr(dataVideo);
+        });
+      
+        // se si chiude la modale resettiamo i dati dell'iframe per impedire ad un video di continuare a riprodursi anche quando la modale è chiusa
+        this.on('hidden.bs.modal', function(){
+          $(this).find('iframe').html("").attr("src", "");
+        });
+      
+        return this;
+    };
+  
+})(jQuery);
+
+
+
+
+jQuery(document).ready(function(){
+  jQuery("#myModal").bmdIframe();
+});
+</script>
+
+</head>
+<body onLoad="myFunction(); locate(); ">
+
+
+<div id="loader"></div>
+<script>
+var myVar;
+
+function myFunction() {
+    myVar = setTimeout(showPage, 3000);
+}
+
+function showPage() {
+  document.getElementById("loader").style.display = "none";
+  //document.getElementById("content").style.display = "block";
+}
+</script>
+<div data-role="page" id="pageone">
+	<div data-role="header">
+    <i class="fa fa-plus-square" style="font-size:48px;color:red"></i>  
+	<h1>Health-care Facilities Locator</h1>
+	</div>
+	<p>Your location<div id="demo"></div></p>
+	<form>
+		<p>Select 
+				<select id="no" onchange="createSidebar();">
+					<option>2</option>
+					<option selected="selected">5</option>
+					<option>8</option>
+					<option>10</option>
+					<option>20</option>
+					<option>30</option>
+					<option>40</option>
+					<option>50</option>
+					<option>60</option>
+				</select> facilities near me</p>
+				
+	</form>
+  <div data-role="main" class="ui-content">
+	
+    <div id="content" class="table"></div>
+    <!-- <a href="#pagetwo">Go to Dialog Page</a> -->
+  </div>
+
+  <div data-role="footer">
+    <h1>Uasin Gishu County</h1>
+  </div>
+</div> 
+
+<div class="container">
+        <div class="row">
+			<div class="col-xs-12">
+				<div class="page">
+		  
+				</div>
+			</div>
+		</div>
+</div>
+<footer>
+	<div class="modal fade" id="myModal">
+		<div class="modal-dialog">
+			<div class="modal-content bmd-modalContent">
+
+				<div class="modal-body">
+          
+          <div class="close-button">
+					<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+          </div>
+          <div class="embed-responsive embed-responsive-16by9">
+					            <iframe class="embed-responsive-item" frameborder="0"></iframe>
+          </div>
+				</div>
+
+			</div><!-- /.modal-content -->
+		</div><!-- /.modal-dialog -->
+	</div><!-- /.modal -->
+  
+ </footer>
+
+</body>
+</html>
